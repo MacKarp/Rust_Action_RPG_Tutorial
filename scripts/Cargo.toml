@@ -1,0 +1,13 @@
+[package]
+name = "scripts"
+version = "0.1.0"
+authors = ["MacKarp <email@email.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gdnative = "0.9.0-preview.0"
+
+[lib]
+crate-type = ["cdylib"]
