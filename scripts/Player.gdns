@@ -1,0 +1,10 @@
+[gd_resource type="NativeScript" load_steps=2 format=2]
+
+[sub_resource type="GDNativeLibrary" id=1]
+entry/X11.64 = "res://scripts/target/debug/libscripts.so"
+dependency/X11.64 = [  ]
+
+[resource]
+resource_name = "player"
+class_name = "Player"
+library = SubResource( 1 )
