@@ -8,9 +8,9 @@ pub struct Player {
     velocity: Vector2,
 }
 
-const ACCELERATION: f32 = 10.0;
-const MAX_SPEED: f32 = 100.0;
-const FRICTION: f32 = 10.0;
+const ACCELERATION: f32 = 500.0;
+const MAX_SPEED: f32 = 80.0;
+const FRICTION: f32 = 500.0;
 
 // Player implementation.
 #[gdnative::methods]
@@ -42,13 +42,23 @@ impl Player {
         input_vector = normalized(input_vector);
 
         if input_vector != Vector2::zero() {
-            self.velocity += input_vector * ACCELERATION * delta as f32;
-            self.velocity = clamped(self.velocity, MAX_SPEED * delta as f32);
+            self.velocity = move_towards(
+                self.velocity,
+                input_vector * MAX_SPEED,
+                ACCELERATION * delta as f32,
+            );
         } else {
             self.velocity = move_towards(self.velocity, Vector2::zero(), FRICTION * delta as f32);
         }
 
-        let _move_and_collide =
-            KinematicBody2D::move_and_collide(owner, self.velocity, false, false, false);
+        self.velocity = KinematicBody2D::move_and_slide(
+            owner,
+            self.velocity,
+            Vector2::zero(),
+            false,
+            4,
+            std::f64::consts::FRAC_PI_4,
+            true,
+        );
     }
 }
