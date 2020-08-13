@@ -1,4 +1,5 @@
 use crate::utils::*;
+use gdnative::api::*;
 use gdnative::prelude::*;
 
 // Player "class".
@@ -33,6 +34,14 @@ impl Player {
     fn _physics_process(&mut self, owner: &KinematicBody2D, delta: f64) {
         let input = Input::godot_singleton();
 
+        let player_animation = owner
+            .get_node("Player_Animation")
+            .expect("Node Should Exist");
+        let player_animation = unsafe { player_animation.assume_safe() };
+        let player_animation = player_animation
+            .cast::<AnimationPlayer>()
+            .expect("Node should cast to AnimationPlayer");
+
         let mut input_vector = Vector2::zero();
         input_vector.x = Input::get_action_strength(input, "ui_right") as f32
             - Input::get_action_strength(input, "ui_left") as f32;
@@ -42,12 +51,18 @@ impl Player {
         input_vector = normalized(input_vector);
 
         if input_vector != Vector2::zero() {
+            if input_vector.x > 0.0 {
+                player_animation.play("RunRight", 0.0, 1.0, false);
+            } else {
+                player_animation.play("RunLeft", 0.0, 1.0, false);
+            }
             self.velocity = move_towards(
                 self.velocity,
                 input_vector * MAX_SPEED,
                 ACCELERATION * delta as f32,
             );
         } else {
+            player_animation.play("IdleRight", 0.0, 1.0, false);
             self.velocity = move_towards(self.velocity, Vector2::zero(), FRICTION * delta as f32);
         }
 
