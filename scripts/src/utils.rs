@@ -1,4 +1,4 @@
-use gdnative::{prelude::{Vector2}};
+use gdnative::prelude::Vector2;
 
 /// Returns the vector scaled to unit length. Equivalent to v / v.length().
 #[allow(dead_code)]

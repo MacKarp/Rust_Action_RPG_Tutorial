@@ -1,6 +1,8 @@
-use gdnative::{api::{AnimationPlayer, AnimationTree, AnimationNodeStateMachinePlayback}, prelude::{NativeClass, KinematicBody2D, Vector2, Input }};
-use crate::utils::{normalized, move_towards};
-
+use crate::utils::{move_towards, normalized};
+use gdnative::{
+    api::{AnimationNodeStateMachinePlayback, AnimationPlayer, AnimationTree},
+    prelude::{Input, KinematicBody2D, NativeClass, Vector2},
+};
 
 // Player "class".
 #[derive(NativeClass)]
