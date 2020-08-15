@@ -1,6 +1,4 @@
-use gdnative::prelude::*;
-
-const CMP_EPSILON: f32 = 0.00001;
+use gdnative::{prelude::{Vector2}};
 
 /// Returns the vector scaled to unit length. Equivalent to v / v.length().
 #[allow(dead_code)]
@@ -16,20 +14,19 @@ pub fn normalized(vector_to_normalize: Vector2) -> Vector2 {
 /// Moves the vector toward to by the fixed delta amount.
 #[allow(dead_code)]
 #[inline]
-
 pub fn move_towards(start_vector: Vector2, to: Vector2, delta: f32) -> Vector2 {
     let vd = to - start_vector;
     let len = vd.length();
-    if len <= delta || len < CMP_EPSILON {
+    if len <= delta || approx::abs_diff_eq!(0.0, len) {
         to
     } else {
-        start_vector + vd / len * delta
+        Vector2::lerp(&start_vector, to, delta / len)
     }
 }
 
-// Returns the vector with a maximum length by limiting its length to `length`.
+/// Returns the vector with a maximum length by limiting its length to `length`.
 #[allow(dead_code)]
 #[inline]
-pub fn clamped(vector_to_clamp: Vector2, length: f32) -> Vector2 {
-    vector_to_clamp.clamp_length(0.0, length)
+pub fn clamped(vector2_to_clamp: Vector2, length: f32) -> Vector2 {
+    vector2_to_clamp.clamp_length(0.0, length)
 }

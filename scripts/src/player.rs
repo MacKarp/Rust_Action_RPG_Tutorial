@@ -1,6 +1,6 @@
-use crate::utils::*;
-use gdnative::api::*;
-use gdnative::prelude::*;
+use gdnative::{api::{AnimationPlayer, AnimationTree, AnimationNodeStateMachinePlayback}, prelude::{NativeClass, KinematicBody2D, Vector2, Input }};
+use crate::utils::{normalized, move_towards};
+
 
 // Player "class".
 #[derive(NativeClass)]
@@ -34,13 +34,28 @@ impl Player {
     fn _physics_process(&mut self, owner: &KinematicBody2D, delta: f64) {
         let input = Input::godot_singleton();
 
-        let player_animation = owner
-            .get_node("Player_Animation")
+        // Access to AnimationPlayer node
+        let animation_player = owner
+            .get_node("AnimationPlayer")
             .expect("Node Should Exist");
-        let player_animation = unsafe { player_animation.assume_safe() };
-        let player_animation = player_animation
+        let animation_player = unsafe { animation_player.assume_safe() };
+        let animation_player = animation_player
             .cast::<AnimationPlayer>()
             .expect("Node should cast to AnimationPlayer");
+
+        // Access to AnimationTree node
+        let animation_tree = owner.get_node("AnimationTree").expect("Node Should Exist");
+        let animation_tree = unsafe { animation_tree.assume_safe() };
+        let animation_tree = animation_tree
+            .cast::<AnimationTree>()
+            .expect("Node should cast to AnimationTree");
+
+        // Access to Animation State AnimationNodeStateMachinePlayback inside AnimationTree node
+        let animation_state = animation_tree.get("parameters/playback");
+        let animation_state = animation_state
+            .try_to_object::<AnimationNodeStateMachinePlayback>()
+            .expect("cast should be valid");
+        let animation_state = unsafe { animation_state.assume_safe() };
 
         let mut input_vector = Vector2::zero();
         input_vector.x = Input::get_action_strength(input, "ui_right") as f32
@@ -51,18 +66,19 @@ impl Player {
         input_vector = normalized(input_vector);
 
         if input_vector != Vector2::zero() {
-            if input_vector.x > 0.0 {
-                player_animation.play("RunRight", 0.0, 1.0, false);
-            } else {
-                player_animation.play("RunLeft", 0.0, 1.0, false);
-            }
+            animation_tree.set("parameters/Idle/blend_position", input_vector);
+            animation_tree.set("parameters/Run/blend_position", input_vector);
+
+            animation_state.travel("Run");
+
             self.velocity = move_towards(
                 self.velocity,
                 input_vector * MAX_SPEED,
                 ACCELERATION * delta as f32,
             );
         } else {
-            player_animation.play("IdleRight", 0.0, 1.0, false);
+            animation_state.travel("Idle");
+
             self.velocity = move_towards(self.velocity, Vector2::zero(), FRICTION * delta as f32);
         }
 
