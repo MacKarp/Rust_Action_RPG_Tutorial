@@ -1,4 +1,4 @@
-use crate::utils::{move_towards, normalized};
+use crate::utils::*;
 use gdnative::api::*;
 use gdnative::prelude::*;
 
@@ -8,6 +8,7 @@ use gdnative::prelude::*;
 pub struct Player {
     velocity: Vector2,
     state: PlayerState,
+    input_vector: Vector2,
 }
 
 const ACCELERATION: f32 = 500.0;
@@ -28,6 +29,7 @@ impl Player {
         Player {
             velocity: Vector2::zero(),
             state: PlayerState::MOVE,
+            input_vector: Vector2::zero(),
         }
     }
 
@@ -39,22 +41,12 @@ impl Player {
     // Called during the physics processing step of the main loop.
     // Physics processing means that the frame rate is synced to the physics, i.e. the delta variable should be constant.
     #[export]
-    fn _physics_process(&mut self, owner: &KinematicBody2D, delta: f64) {
-        let input = Input::godot_singleton();
-
-        let mut input_vector = Vector2::zero();
-        input_vector.x = Input::get_action_strength(input, "ui_right") as f32
-            - Input::get_action_strength(input, "ui_left") as f32;
-        input_vector.y = Input::get_action_strength(input, "ui_down") as f32
-            - Input::get_action_strength(input, "ui_up") as f32;
-
-        input_vector = normalized(input_vector);
-
+    fn _process(&mut self, owner: &KinematicBody2D, delta: f64) {
         /*
         // Access to AnimationPlayer node
         let animation_player = owner
             .get_node("AnimationPlayer")
-            .expect("Node Should Exist");
+            .expect("AnimationPlayer node Should Exist");
         let animation_player = unsafe { animation_player.assume_safe() };
         let animation_player = animation_player
             .cast::<AnimationPlayer>()
@@ -62,7 +54,9 @@ impl Player {
         */
 
         // Access to AnimationTree node
-        let animation_tree = owner.get_node("AnimationTree").expect("Node Should Exist");
+        let animation_tree = owner
+            .get_node("AnimationTree")
+            .expect("AnimationTree node Should Exist");
         let animation_tree = unsafe { animation_tree.assume_safe() };
         let animation_tree = animation_tree
             .cast::<AnimationTree>()
@@ -74,13 +68,11 @@ impl Player {
         let animation_state = animation_tree.get("parameters/playback");
         let animation_state = animation_state
             .try_to_object::<AnimationNodeStateMachinePlayback>()
-            .expect("cast should be valid");
+            .expect("Should cast to AnimationNodeStateMachinePlayback");
         let animation_state = unsafe { animation_state.assume_safe() };
 
         match self.state {
-            PlayerState::MOVE => {
-                self.move_state(&owner, delta, input_vector, animation_tree, animation_state)
-            }
+            PlayerState::MOVE => self.move_state(&owner, delta, animation_tree, animation_state),
             PlayerState::ROLL => self.roll_state(),
             PlayerState::ATTACK => self.attack_state(owner, animation_state),
         }
@@ -90,19 +82,27 @@ impl Player {
         &mut self,
         owner: &KinematicBody2D,
         delta: f64,
-        input_vector: Vector2,
         animation_tree: TRef<AnimationTree>,
         animation_state: TRef<AnimationNodeStateMachinePlayback>,
     ) {
-        if input_vector != Vector2::zero() {
-            animation_tree.set("parameters/Idle/blend_position", input_vector);
-            animation_tree.set("parameters/Run/blend_position", input_vector);
-            animation_tree.set("parameters/Attack/blend_position", input_vector);
+        let input = Input::godot_singleton();
+        self.input_vector = Vector2::zero();
+        self.input_vector.x = Input::get_action_strength(input, "ui_right") as f32
+            - Input::get_action_strength(input, "ui_left") as f32;
+        self.input_vector.y = Input::get_action_strength(input, "ui_down") as f32
+            - Input::get_action_strength(input, "ui_up") as f32;
+
+        self.input_vector = normalized(self.input_vector);
+
+        if self.input_vector != Vector2::zero() {
+            animation_tree.set("parameters/Idle/blend_position", self.input_vector);
+            animation_tree.set("parameters/Run/blend_position", self.input_vector);
+            animation_tree.set("parameters/Attack/blend_position", self.input_vector);
 
             animation_state.travel("Run");
             self.velocity = move_towards(
                 self.velocity,
-                input_vector * MAX_SPEED,
+                self.input_vector * MAX_SPEED,
                 ACCELERATION * delta as f32,
             );
         } else {
@@ -121,7 +121,6 @@ impl Player {
             true,
         );
 
-        let input = Input::godot_singleton();
         if Input::is_action_just_pressed(input, "attack") {
             self.state = PlayerState::ATTACK;
         }
@@ -137,7 +136,7 @@ impl Player {
         // Can't find a way to run function at end of animation...
         let animation_player = owner
             .get_node("AnimationPlayer")
-            .expect("Node Should Exist");
+            .expect("AnimationPlayer node Should Exist");
         let animation_player = unsafe { animation_player.assume_safe() };
         let animation_player = animation_player
             .cast::<AnimationPlayer>()
