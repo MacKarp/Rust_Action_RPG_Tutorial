@@ -78,6 +78,12 @@ impl Player {
         }
     }
 
+    // Need to add script function "_ready" and then rename function in inspector to `attack_animation_finished`
+    #[export]
+    fn attack_animation_finished(&mut self, _owner: &KinematicBody2D) {
+        self.state = PlayerState::MOVE;
+    }
+
     fn move_state(
         &mut self,
         owner: &KinematicBody2D,
@@ -125,31 +131,14 @@ impl Player {
             self.state = PlayerState::ATTACK;
         }
     }
+
     fn attack_state(
         &mut self,
-        owner: &KinematicBody2D,
+        _owner: &KinematicBody2D,
         animation_state: TRef<AnimationNodeStateMachinePlayback>,
     ) {
         self.velocity = Vector2::zero();
         animation_state.travel("Attack");
-
-        // Can't find a way to run function at end of animation...
-        let animation_player = owner
-            .get_node("AnimationPlayer")
-            .expect("AnimationPlayer node Should Exist");
-        let animation_player = unsafe { animation_player.assume_safe() };
-        let animation_player = animation_player
-            .cast::<AnimationPlayer>()
-            .expect("Node should cast to AnimationPlayer");
-
-        // So i check if current animation is still playing
-        if (animation_player.current_animation_length()
-            - animation_player.current_animation_position())
-        .abs()
-            < f64::EPSILON
-        {
-            self.state = PlayerState::MOVE;
-        }
     }
 
     fn roll_state(&mut self) {
