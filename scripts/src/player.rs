@@ -9,10 +9,12 @@ pub struct Player {
     velocity: Vector2,
     state: PlayerState,
     input_vector: Vector2,
+    roll_vector: Vector2,
 }
 
 const ACCELERATION: f32 = 500.0;
 const MAX_SPEED: f32 = 80.0;
+const ROLL_SPEED: f32 = 120.0;
 const FRICTION: f32 = 500.0;
 
 enum PlayerState {
@@ -30,6 +32,7 @@ impl Player {
             velocity: Vector2::zero(),
             state: PlayerState::MOVE,
             input_vector: Vector2::zero(),
+            roll_vector: Vector2::new(-1.0, 0.0),
         }
     }
 
@@ -41,7 +44,7 @@ impl Player {
     // Called during the physics processing step of the main loop.
     // Physics processing means that the frame rate is synced to the physics, i.e. the delta variable should be constant.
     #[export]
-    fn _process(&mut self, owner: &KinematicBody2D, delta: f64) {
+    fn _physics_process(&mut self, owner: &KinematicBody2D, delta: f64) {
         /*
         // Access to AnimationPlayer node
         let animation_player = owner
@@ -72,16 +75,10 @@ impl Player {
         let animation_state = unsafe { animation_state.assume_safe() };
 
         match self.state {
-            PlayerState::MOVE => self.move_state(&owner, delta, animation_tree, animation_state),
-            PlayerState::ROLL => self.roll_state(),
-            PlayerState::ATTACK => self.attack_state(owner, animation_state),
+            PlayerState::MOVE => self.move_state(owner, delta, animation_tree, animation_state),
+            PlayerState::ROLL => self.roll_state(owner, delta, animation_state),
+            PlayerState::ATTACK => self.attack_state(owner, delta, animation_state),
         }
-    }
-
-    // Need to add script function "_ready" and then rename function in inspector to `attack_animation_finished`
-    #[export]
-    fn attack_animation_finished(&mut self, _owner: &KinematicBody2D) {
-        self.state = PlayerState::MOVE;
     }
 
     fn move_state(
@@ -101,9 +98,11 @@ impl Player {
         self.input_vector = normalized(self.input_vector);
 
         if self.input_vector != Vector2::zero() {
+            self.roll_vector = self.input_vector;
             animation_tree.set("parameters/Idle/blend_position", self.input_vector);
             animation_tree.set("parameters/Run/blend_position", self.input_vector);
             animation_tree.set("parameters/Attack/blend_position", self.input_vector);
+            animation_tree.set("parameters/Roll/blend_position", self.input_vector);
 
             animation_state.travel("Run");
             self.velocity = move_towards(
@@ -117,6 +116,40 @@ impl Player {
             self.velocity = move_towards(self.velocity, Vector2::zero(), FRICTION * delta as f32);
         }
 
+        self.player_move(owner);
+
+        if Input::is_action_just_pressed(input, "roll") {
+            self.state = PlayerState::ROLL;
+        }
+
+        if Input::is_action_just_pressed(input, "attack") {
+            self.state = PlayerState::ATTACK;
+        }
+    }
+
+    fn roll_state(
+        &mut self,
+        owner: &KinematicBody2D,
+        _delta: f64,
+        animation_state: TRef<AnimationNodeStateMachinePlayback>,
+    ) {
+        self.velocity = self.roll_vector * ROLL_SPEED;
+        animation_state.travel("Roll");
+        self.player_move(owner);
+    }
+
+    fn attack_state(
+        &mut self,
+        _owner: &KinematicBody2D,
+        _delta: f64,
+        animation_state: TRef<AnimationNodeStateMachinePlayback>,
+    ) {
+        self.velocity = Vector2::zero();
+        animation_state.travel("Attack");
+    }
+
+    // `move` is keyword so had to use `player_move` name instead
+    fn player_move(&mut self, owner: &KinematicBody2D) {
         self.velocity = KinematicBody2D::move_and_slide(
             owner,
             self.velocity,
@@ -126,22 +159,18 @@ impl Player {
             std::f64::consts::FRAC_PI_4,
             true,
         );
-
-        if Input::is_action_just_pressed(input, "attack") {
-            self.state = PlayerState::ATTACK;
-        }
     }
 
-    fn attack_state(
-        &mut self,
-        _owner: &KinematicBody2D,
-        animation_state: TRef<AnimationNodeStateMachinePlayback>,
-    ) {
-        self.velocity = Vector2::zero();
-        animation_state.travel("Attack");
+    // Need to add script function "_ready" and then rename function in inspector to `attack_animation_finished`
+    #[export]
+    fn attack_animation_finished(&mut self, _owner: &KinematicBody2D) {
+        self.state = PlayerState::MOVE;
     }
 
-    fn roll_state(&mut self) {
-        self.state = PlayerState::ROLL;
+    // Need to add script function "_ready" and then rename function in inspector to `roll_animation_finished`
+    #[export]
+    fn roll_animation_finished(&mut self, _owner: &KinematicBody2D) {
+        self.velocity *= 0.8;
+        self.state = PlayerState::MOVE;
     }
 }
