@@ -39,7 +39,19 @@ impl Player {
     // Called when the node is "ready", i.e. when both the node and its children have entered the scene tree.
     // If the node has children, their _ready() callbacks get triggered first, and the parent node will receive the ready notification afterwards.
     #[export]
-    fn _ready(&self, _owner: &KinematicBody2D) {}
+    fn _ready(&mut self, owner: &KinematicBody2D) {
+        // Access to HitboxPivot/SwordHitbox node
+        let sword_hitbox = owner
+            .get_node("HitboxPivot/SwordHitbox")
+            .expect("SwordHitbox node Should Exist");
+        let sword_hitbox = unsafe { sword_hitbox.assume_safe() };
+        let sword_hitbox = sword_hitbox
+            .cast::<Area2D>()
+            .expect("Node should cast to Area2D");
+
+        // Set `knockback_vector` variable in HitboxPivot/SwordHitbox node
+        sword_hitbox.set("knockback_vector", self.roll_vector);
+    }
 
     // Called during the physics processing step of the main loop.
     // Physics processing means that the frame rate is synced to the physics, i.e. the delta variable should be constant.
@@ -99,6 +111,19 @@ impl Player {
 
         if self.input_vector != Vector2::zero() {
             self.roll_vector = self.input_vector;
+
+            // Access to HitboxPivot/SwordHitbox node
+            let sword_hitbox = owner
+                .get_node("HitboxPivot/SwordHitbox")
+                .expect("SwordHitbox node Should Exist");
+            let sword_hitbox = unsafe { sword_hitbox.assume_safe() };
+            let sword_hitbox = sword_hitbox
+                .cast::<Area2D>()
+                .expect("Node should cast to Area2D");
+
+            // Set `knockback_vector` variable in HitboxPivot/SwordHitbox node
+            sword_hitbox.set("knockback_vector", self.input_vector);
+
             animation_tree.set("parameters/Idle/blend_position", self.input_vector);
             animation_tree.set("parameters/Run/blend_position", self.input_vector);
             animation_tree.set("parameters/Attack/blend_position", self.input_vector);
@@ -150,8 +175,7 @@ impl Player {
 
     // `move` is keyword so had to use `player_move` name instead
     fn player_move(&mut self, owner: &KinematicBody2D) {
-        self.velocity = KinematicBody2D::move_and_slide(
-            owner,
+        self.velocity = owner.move_and_slide(
             self.velocity,
             Vector2::zero(),
             false,
