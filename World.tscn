@@ -1,7 +1,8 @@
-[gd_scene load_steps=56 format=2]
+[gd_scene load_steps=57 format=2]
 
 [ext_resource path="res://World/Bush.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Player/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Enemies/Bat.tscn" type="PackedScene" id=3]
 [ext_resource path="res://World/GrassBackground.png" type="Texture" id=4]
 [ext_resource path="res://World/DirtTileset.png" type="Texture" id=5]
 [ext_resource path="res://World/CliffTileset.png" type="Texture" id=6]
@@ -561,3 +562,12 @@ position = Vector2( 272, 96 )
 
 [node name="Grass11" parent="YSort/Grass" instance=ExtResource( 7 )]
 position = Vector2( 160, 112 )
+
+[node name="Bat" parent="YSort" instance=ExtResource( 3 )]
+position = Vector2( 192, 24 )
+
+[node name="Bat2" parent="YSort" instance=ExtResource( 3 )]
+position = Vector2( 216, 160 )
+
+[node name="Bat3" parent="YSort" instance=ExtResource( 3 )]
+position = Vector2( 40, 96 )
