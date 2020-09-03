@@ -1,10 +1,11 @@
-extern crate gdnative;
 use gdnative::prelude::*;
 
 mod bat;
 mod grass;
 mod grass_effect;
+mod hitbox;
 mod player;
+mod stats;
 mod sword_hitbox;
 mod utils;
 
@@ -14,6 +15,8 @@ fn init(handle: InitHandle) {
     handle.add_class::<grass::Grass>();
     handle.add_class::<grass_effect::GrassEffect>();
     handle.add_class::<bat::Bat>();
+    handle.add_class::<stats::Stats>();
+    handle.add_class::<hitbox::Hitbox>();
     handle.add_class::<sword_hitbox::SwordHitbox>();
 }
 

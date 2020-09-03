@@ -6,7 +6,6 @@
 [ext_resource path="res://Player/SwordHitbox.gdns" type="Script" id=4]
 
 [sub_resource type="CapsuleShape2D" id=1]
-custom_solver_bias = 1.0
 radius = 4.0
 height = 4.0
 
@@ -588,16 +587,16 @@ blend_mode = 1
 
 [sub_resource type="AnimationNodeStateMachine" id=44]
 states/Attack/node = SubResource( 22 )
-states/Attack/position = Vector2( 481, 155 )
+states/Attack/position = Vector2( 424, 248 )
 states/Idle/node = SubResource( 27 )
-states/Idle/position = Vector2( 481, 71 )
+states/Idle/position = Vector2( 424, 153 )
 states/Roll/node = SubResource( 32 )
-states/Roll/position = Vector2( 481, -25 )
+states/Roll/position = Vector2( 424, 32 )
 states/Run/node = SubResource( 37 )
-states/Run/position = Vector2( 732, 71 )
+states/Run/position = Vector2( 619, 153 )
 transitions = [ "Idle", "Run", SubResource( 38 ), "Run", "Idle", SubResource( 39 ), "Idle", "Attack", SubResource( 40 ), "Attack", "Idle", SubResource( 41 ), "Idle", "Roll", SubResource( 42 ), "Roll", "Idle", SubResource( 43 ) ]
 start_node = "Idle"
-graph_offset = Vector2( 15, -102 )
+graph_offset = Vector2( -74, -45 )
 
 [sub_resource type="AnimationNodeStateMachinePlayback" id=45]
 
@@ -607,15 +606,12 @@ height = 12.0
 [node name="Player" type="KinematicBody2D"]
 collision_layer = 2
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_group_": true
-}
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, -9 )
 texture = ExtResource( 2 )
 hframes = 60
-frame = 12
+frame = 18
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 rotation = -1.5708
@@ -642,7 +638,6 @@ anims/RunUp = SubResource( 17 )
 [node name="AnimationTree" type="AnimationTree" parent="."]
 tree_root = SubResource( 44 )
 anim_player = NodePath("../AnimationPlayer")
-active = true
 parameters/playback = SubResource( 45 )
 parameters/Attack/blend_position = Vector2( 0, 0 )
 parameters/Idle/blend_position = Vector2( 0, 0 )
