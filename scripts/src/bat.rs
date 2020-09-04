@@ -7,6 +7,7 @@ use gdnative::prelude::*;
 #[inherit(KinematicBody2D)]
 pub struct Bat {
     knockback: Vector2,
+    effect_scene_load: Ref<PackedScene>,
 }
 
 #[gdnative::methods]
@@ -14,11 +15,19 @@ impl Bat {
     fn new(_owner: &KinematicBody2D) -> Self {
         Bat {
             knockback: Vector2::zero(),
+            effect_scene_load: PackedScene::new().into_shared(),
         }
     }
 
     #[export]
-    fn _ready(&self, owner: TRef<KinematicBody2D>) {
+    fn _ready(&mut self, owner: TRef<KinematicBody2D>) {
+        // Loading scene
+        let effect_scene_load = self.load_scene("res://Effects/EnemyDeathEffect.tscn");
+        match effect_scene_load {
+            Some(_scene) => self.effect_scene_load = _scene,
+            None => godot_print!("Could not load child scene. Check name."),
+        }
+
         // Access to `Stats` node
         let stats = owner.get_node("Stats").expect("Stats node should exist");
         let stats = unsafe { stats.assume_safe() };
@@ -80,5 +89,31 @@ impl Bat {
     fn _on_stats_no_health(&self, owner: &KinematicBody2D) {
         //Deleting Bat node
         owner.queue_free();
+        let enemy_death_effect = unsafe { self.effect_scene_load.assume_safe() };
+        let enemy_death_effect = enemy_death_effect
+            .instance(PackedScene::GEN_EDIT_STATE_DISABLED)
+            .expect("should be able to instance scene");
+        let parent = owner.get_parent().unwrap();
+        let parent = unsafe { parent.assume_safe() };
+        parent.add_child(enemy_death_effect, false);
+
+        // Accessing to GrassEffect node
+        let enemy_death_effect = enemy_death_effect.to_variant();
+        let enemy_death_effect = enemy_death_effect
+            .try_to_object::<Node2D>()
+            .expect("Should cast to Node2D");
+        let enemy_death_effect = unsafe { enemy_death_effect.assume_safe() };
+
+        // Moving position of GrassEffect
+        enemy_death_effect.set_global_position(owner.global_position());
+    }
+
+    // Scene loading helper function
+    fn load_scene(&self, path: &str) -> Option<Ref<PackedScene, Shared>> {
+        let scene = ResourceLoader::godot_singleton().load(path, "PackedScene", false)?;
+
+        let scene = unsafe { scene.assume_unique().into_shared() };
+
+        scene.cast::<PackedScene>()
     }
 }
