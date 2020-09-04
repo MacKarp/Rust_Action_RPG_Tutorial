@@ -5,6 +5,6 @@ entry/X11.64 = "res://scripts/target/debug/libscripts.so"
 dependency/X11.64 = [  ]
 
 [resource]
-resource_name = "GrassEffect"
-class_name = "GrassEffect"
+resource_name = "Effect"
+class_name = "Effect"
 library = SubResource( 1 )

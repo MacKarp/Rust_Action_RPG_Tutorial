@@ -32,7 +32,7 @@ impl Player {
             velocity: Vector2::zero(),
             state: PlayerState::MOVE,
             input_vector: Vector2::zero(),
-            roll_vector: Vector2::new(-1.0, 0.0),
+            roll_vector: Vector2::new(0.0, 1.0),
         }
     }
 
