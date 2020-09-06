@@ -1,4 +1,5 @@
-use gdnative::prelude::Vector2;
+use gdnative::api::*;
+use gdnative::prelude::*;
 
 /// Returns the vector scaled to unit length. Equivalent to v / v.length().
 #[allow(dead_code)]
@@ -29,4 +30,13 @@ pub fn move_towards(start_vector: Vector2, to: Vector2, delta: f32) -> Vector2 {
 #[inline]
 pub fn clamped(vector2_to_clamp: Vector2, length: f32) -> Vector2 {
     vector2_to_clamp.clamp_length(0.0, length)
+}
+
+#[allow(dead_code)]
+#[inline]
+// Scene loading helper function
+pub fn load_scene(path: &str) -> Option<Ref<PackedScene, Shared>> {
+    let scene = ResourceLoader::godot_singleton().load(path, "PackedScene", false)?;
+    let scene = unsafe { scene.assume_unique().into_shared() };
+    scene.cast::<PackedScene>()
 }

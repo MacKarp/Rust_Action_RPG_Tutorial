@@ -1,3 +1,4 @@
+use crate::utils::*;
 use gdnative::api::*;
 use gdnative::prelude::*;
 
@@ -21,7 +22,7 @@ impl Grass {
     #[export]
     fn _ready(&mut self, _owner: &Node2D) {
         // Loading effect scene
-        let effect_scene_load = self.load_scene("res://Effects/GrassEffect.tscn");
+        let effect_scene_load = load_scene("res://Effects/GrassEffect.tscn");
         match effect_scene_load {
             Some(_scene) => self.effect_scene_load = _scene,
             None => godot_print!("Could not load child scene. Check name."),
@@ -53,18 +54,11 @@ impl Grass {
 
     // Accepting signal
     #[export]
-    fn _on_hurtbox_area_entered(&mut self, owner: &Node2D, _area: Ref<Area2D>) {
+    fn _on_hurtbox_area_entered(&mut self, owner: &Node2D, area: Ref<Area2D>) {
+        let area = unsafe { area.assume_safe() };
+        area.set("show_hit", false.to_variant());
         self.create_grass_effect(owner);
         // Deleting Grass node
         owner.queue_free();
-    }
-
-    // Scene loading helper function
-    fn load_scene(&self, path: &str) -> Option<Ref<PackedScene, Shared>> {
-        let scene = ResourceLoader::godot_singleton().load(path, "PackedScene", false)?;
-
-        let scene = unsafe { scene.assume_unique().into_shared() };
-
-        scene.cast::<PackedScene>()
     }
 }

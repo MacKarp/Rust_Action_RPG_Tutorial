@@ -4,7 +4,9 @@ mod bat;
 mod effect;
 mod grass;
 mod hitbox;
+mod hurtbox;
 mod player;
+mod player_detecion_zone;
 mod stats;
 mod sword_hitbox;
 mod utils;
@@ -18,6 +20,8 @@ fn init(handle: InitHandle) {
     handle.add_class::<stats::Stats>();
     handle.add_class::<hitbox::Hitbox>();
     handle.add_class::<sword_hitbox::SwordHitbox>();
+    handle.add_class::<hurtbox::Hurtbox>();
+    handle.add_class::<player_detecion_zone::PlayerDetecionZone>();
 }
 
 // Macro that create the entry-points of the dynamic library.
