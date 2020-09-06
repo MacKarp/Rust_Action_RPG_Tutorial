@@ -8,8 +8,9 @@ use gdnative::prelude::*;
 pub struct SwordHitbox {
     #[property]
     knockback_vector: Vector2,
-    //#[property]
     hitbox: Hitbox,
+    #[property(default = true)]
+    show_hit: bool,
 }
 
 #[gdnative::methods]
@@ -18,6 +19,7 @@ impl SwordHitbox {
         SwordHitbox {
             knockback_vector: Vector2::zero(),
             hitbox: Hitbox::new(&owner),
+            show_hit: true,
         }
     }
 
