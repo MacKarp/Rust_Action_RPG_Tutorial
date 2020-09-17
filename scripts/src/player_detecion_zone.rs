@@ -19,21 +19,13 @@ impl PlayerDetecionZone {
     #[export]
     fn can_see_player(&self, _owner: &Area2D) -> bool {
         let player = unsafe { self.player.assume_safe() };
-        if player.name() != GodotString::from_str("Player") {
-            return false;
-        } else {
-            return true;
-        }
+        !(player.name() != GodotString::from_str("Player"))
     }
 
     #[export]
     fn is_player(&self, _owner: &Area2D) -> bool {
         let player = unsafe { self.player.assume_safe() };
-        if player.name() != GodotString::from_str("Player") {
-            return false;
-        } else {
-            return true;
-        }
+        !(player.name() != GodotString::from_str("Player"))
     }
 
     #[export]

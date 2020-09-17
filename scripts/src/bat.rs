@@ -19,6 +19,7 @@ pub struct Bat {
     stats: Ref<Node>,
     player_detecion_zone: Ref<Node>,
     sprite: Ref<Node>,
+    hurtbox: Ref<Node>,
 }
 
 enum BatState {
@@ -41,6 +42,7 @@ impl Bat {
             stats: Node::new().into_shared(),
             player_detecion_zone: Node::new().into_shared(),
             sprite: Node::new().into_shared(),
+            hurtbox: Node::new().into_shared(),
         }
     }
 
@@ -82,6 +84,11 @@ impl Bat {
         self.sprite = owner
             .get_node("AnimatedSprite")
             .expect("AnimatedSprite node should exist");
+
+        // Access to `Hurtbox` node
+        self.hurtbox = owner
+            .get_node("Hurtbox")
+            .expect("Hurtbox node should exist");
     }
 
     #[export]
@@ -146,19 +153,21 @@ impl Bat {
         let stats = unsafe { self.stats.assume_safe() };
         let stats = stats.cast::<Node>().expect("Node should cast to Node");
         let area = unsafe { area.assume_safe() };
-        area.set("show_hit", true.to_variant());
+        //area.set("show_hit", true.to_variant());
 
         // Update `health` variable in `Stats` node
         let health = (stats.get("health").to_i64()
             - unsafe { area.call("get_hitbox_damage", &[]).to_i64() })
         .to_variant();
-        //       let health = (stats.get("health").to_i64() - 1).to_variant();
 
         unsafe {
             stats.call("set_health", &[health]);
         }
 
         self.knockback = area.get("knockback_vector").to_vector2() * 120.0;
+
+        let hurtbox = unsafe { self.hurtbox.assume_safe() };
+        unsafe { hurtbox.call("create_hit_effect", &[]) };
     }
 
     // Accepting signal
