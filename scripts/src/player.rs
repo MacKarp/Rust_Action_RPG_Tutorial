@@ -10,6 +10,8 @@ pub struct Player {
     state: PlayerState,
     input_vector: Vector2,
     roll_vector: Vector2,
+    stats: Ref<Node>,
+    hurtbox: Ref<Node>,
 }
 
 const ACCELERATION: f32 = 500.0;
@@ -33,14 +35,16 @@ impl Player {
             state: PlayerState::MOVE,
             input_vector: Vector2::zero(),
             roll_vector: Vector2::new(0.0, 1.0),
+            stats: Node::new().into_shared(),
+            hurtbox: Node::new().into_shared(),
         }
     }
 
     // Called when the node is "ready", i.e. when both the node and its children have entered the scene tree.
     // If the node has children, their _ready() callbacks get triggered first, and the parent node will receive the ready notification afterwards.
     #[export]
-    fn _ready(&mut self, owner: &KinematicBody2D) {
-        // Access to HitboxPivot/SwordHitbox node
+    fn _ready(&mut self, owner: TRef<KinematicBody2D>) {
+        // Access to `HitboxPivot/SwordHitbox` node
         let sword_hitbox = owner
             .get_node("HitboxPivot/SwordHitbox")
             .expect("SwordHitbox node Should Exist");
@@ -51,6 +55,28 @@ impl Player {
 
         // Set `knockback_vector` variable in HitboxPivot/SwordHitbox node
         sword_hitbox.set("knockback_vector", self.roll_vector);
+
+        // Access `PlayerStats` singleton
+        self.stats = owner
+            .get_node("../../../PlayerStats")
+            .expect("PlayerStats node Should Exist");
+
+        let stats = unsafe { self.stats.assume_safe() };
+        // Connecting to signal
+        stats
+            .connect(
+                "no_health",
+                owner,
+                "queue_free",
+                VariantArray::new_shared(),
+                1,
+            )
+            .unwrap();
+
+        // Access `Hurtbox` node
+        self.hurtbox = owner
+            .get_node("Hurtbox")
+            .expect("Hurtbox node Should Exist");
     }
 
     // Called during the physics processing step of the main loop.
@@ -196,5 +222,21 @@ impl Player {
     fn roll_animation_finished(&mut self, _owner: &KinematicBody2D) {
         self.velocity *= 0.8;
         self.state = PlayerState::MOVE;
+    }
+
+    #[export]
+    fn _on_hurtbox_area_entered(&self, _owner: &KinematicBody2D, _area: Ref<Area2D>) {
+        let stats = unsafe { self.stats.assume_safe() };
+
+        // Update `health` variable in `PlayerStats` node
+        let health = (stats.get("health").to_i64() - 1 as i64).to_variant();
+
+        unsafe {
+            stats.call("set_health", &[health]);
+        }
+
+        let hurtbox = unsafe { self.hurtbox.assume_safe() };
+        unsafe { hurtbox.call("start_invincibility", &[(0.5).to_variant()]) };
+        unsafe { hurtbox.call("create_hit_effect", &[]) };
     }
 }
