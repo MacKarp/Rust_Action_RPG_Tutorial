@@ -229,8 +229,7 @@ impl Player {
         let stats = unsafe { self.stats.assume_safe() };
 
         // Update `health` variable in `PlayerStats` node
-        let health = (stats.get("health").to_i64() - 1 as i64).to_variant();
-
+        let health = unsafe { (stats.call("get_health", &[]).to_i64() - 1 as i64).to_variant() };
         unsafe {
             stats.call("set_health", &[health]);
         }

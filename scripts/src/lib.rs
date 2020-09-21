@@ -3,6 +3,7 @@ use gdnative::prelude::*;
 mod bat;
 mod effect;
 mod grass;
+mod health_ui;
 mod hitbox;
 mod hurtbox;
 mod player;
@@ -22,6 +23,7 @@ fn init(handle: InitHandle) {
     handle.add_class::<sword_hitbox::SwordHitbox>();
     handle.add_class::<hurtbox::Hurtbox>();
     handle.add_class::<player_detecion_zone::PlayerDetecionZone>();
+    handle.add_class::<health_ui::HealthUI>();
 }
 
 // Macro that create the entry-points of the dynamic library.
