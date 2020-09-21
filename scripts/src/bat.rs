@@ -72,8 +72,10 @@ impl Bat {
             .unwrap();
 
         // Set `max_health` and `health` variable in `Stats` node
-        stats.set("max_health", 2);
-        stats.set("health", 2);
+        unsafe {
+            stats.call("set_max_health", &[2.to_variant()]);
+            stats.call("set_health", &[2.to_variant()])
+        };
 
         // Access to `PlayerDetectionZone` node
         self.player_detecion_zone = owner
@@ -156,9 +158,10 @@ impl Bat {
         //area.set("show_hit", true.to_variant());
 
         // Update `health` variable in `Stats` node
-        let health = (stats.get("health").to_i64()
-            - unsafe { area.call("get_hitbox_damage", &[]).to_i64() })
-        .to_variant();
+        let health = unsafe {
+            (stats.call("get_health", &[]).to_i64() - area.call("get_hitbox_damage", &[]).to_i64())
+                .to_variant()
+        };
 
         unsafe {
             stats.call("set_health", &[health]);

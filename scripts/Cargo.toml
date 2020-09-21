@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 gdnative = "0.9.0-preview.0"
 approx = "0.3.2"
+num = "0.3.0"
 
 [lib]
 crate-type = ["cdylib"]
