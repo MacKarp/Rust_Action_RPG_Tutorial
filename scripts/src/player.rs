@@ -156,15 +156,15 @@ impl Player {
             animation_tree.set("parameters/Roll/blend_position", self.input_vector);
 
             animation_state.travel("Run");
-            self.velocity = move_towards(
-                self.velocity,
-                self.input_vector * MAX_SPEED,
-                ACCELERATION * delta as f32,
-            );
+            self.velocity = self
+                .velocity
+                .move_towards(self.input_vector * MAX_SPEED, ACCELERATION * delta as f32);
         } else {
             animation_state.travel("Idle");
 
-            self.velocity = move_towards(self.velocity, Vector2::zero(), FRICTION * delta as f32);
+            self.velocity = self
+                .velocity
+                .move_towards(Vector2::zero(), FRICTION * delta as f32);
         }
 
         self.player_move(owner);
