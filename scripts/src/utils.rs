@@ -12,19 +12,6 @@ pub fn normalized(vector_to_normalize: Vector2) -> Vector2 {
     }
 }
 
-/// Moves the vector toward to by the fixed delta amount.
-#[allow(dead_code)]
-#[inline]
-pub fn move_towards(start_vector: Vector2, to: Vector2, delta: f32) -> Vector2 {
-    let vd = to - start_vector;
-    let len = vd.length();
-    if len <= delta || approx::abs_diff_eq!(0.0, len) {
-        to
-    } else {
-        Vector2::lerp(&start_vector, to, delta / len)
-    }
-}
-
 /// Returns the vector with a maximum length by limiting its length to `length`.
 #[allow(dead_code)]
 #[inline]

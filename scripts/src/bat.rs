@@ -20,6 +20,7 @@ pub struct Bat {
     player_detecion_zone: Ref<Node>,
     sprite: Ref<Node>,
     hurtbox: Ref<Node>,
+    soft_collision: Ref<Node>,
 }
 
 enum BatState {
@@ -43,6 +44,7 @@ impl Bat {
             player_detecion_zone: Node::new().into_shared(),
             sprite: Node::new().into_shared(),
             hurtbox: Node::new().into_shared(),
+            soft_collision: Node::new().into_shared(),
         }
     }
 
@@ -91,15 +93,18 @@ impl Bat {
         self.hurtbox = owner
             .get_node("Hurtbox")
             .expect("Hurtbox node should exist");
+
+        // Access to `SoftCollision` node
+        self.soft_collision = owner
+            .get_node("SoftCollision")
+            .expect("SoftCollision node should exist");
     }
 
     #[export]
     fn _physics_process(&mut self, owner: &KinematicBody2D, delta: f64) {
-        self.knockback = move_towards(
-            self.knockback,
-            Vector2::zero(),
-            self.friction * delta as f32,
-        );
+        self.knockback = self
+            .knockback
+            .move_towards(Vector2::zero(), self.friction * delta as f32);
         self.knockback = owner.move_and_slide(
             self.knockback,
             Vector2::zero(),
@@ -110,8 +115,9 @@ impl Bat {
         );
         match self.state {
             BatState::IDLE => {
-                self.velocity =
-                    move_towards(self.velocity, Vector2::zero(), self.friction * delta as f32);
+                self.velocity = self
+                    .velocity
+                    .move_towards(Vector2::zero(), self.friction * delta as f32);
                 self.seek_player(owner);
             }
             BatState::WANDER => godot_print!("WANDER"),
@@ -123,11 +129,9 @@ impl Bat {
                 if player.name() == GodotString::from_str("Player") {
                     let player = player.cast::<Node2D>().expect("Node should cast to Node2D");
                     let direction = normalized(player.global_position() - owner.global_position());
-                    self.velocity = move_towards(
-                        self.velocity,
-                        direction * self.max_speed,
-                        self.acceleration * delta as f32,
-                    );
+                    self.velocity = self
+                        .velocity
+                        .move_towards(direction * self.max_speed, self.acceleration * delta as f32);
                 } else {
                     self.state = BatState::IDLE;
                 }
@@ -137,6 +141,13 @@ impl Bat {
                     .expect("Node should cast to AnimatedSprite");
                 sprite.set_flip_h(self.velocity.x < 0.0);
             }
+        }
+
+        let soft_collision = unsafe { self.soft_collision.assume_safe() };
+        if unsafe { soft_collision.call("is_colliding", &[]).to_bool() } {
+            self.velocity += unsafe { soft_collision.call("get_push_vector", &[]).to_vector2() }
+                * delta as f32
+                * 400.0;
         }
 
         self.velocity = owner.move_and_slide(
