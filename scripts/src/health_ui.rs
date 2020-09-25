@@ -33,7 +33,7 @@ impl HealthUI {
 
         // Access `PlayerStats` singleton
         let player_stats = owner
-            .get_node("../../PlayerStats")
+            .get_node("../../../PlayerStats")
             .expect("PlayerStats node Should Exist");
         let player_stats = unsafe { player_stats.assume_safe() };
 
