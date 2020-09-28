@@ -10,6 +10,7 @@ edition = "2018"
 gdnative = "0.9.0"
 approx = "0.3.2"
 num = "0.3.0"
+rand = "0.7.3"
 
 [lib]
 crate-type = ["cdylib"]

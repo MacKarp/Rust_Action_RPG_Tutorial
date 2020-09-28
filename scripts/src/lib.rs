@@ -12,6 +12,7 @@ mod soft_collision;
 mod stats;
 mod sword_hitbox;
 mod utils;
+mod wander_controller;
 
 // Function that registers all exposed classes to Godot
 fn init(handle: InitHandle) {
@@ -26,6 +27,7 @@ fn init(handle: InitHandle) {
     handle.add_class::<player_detecion_zone::PlayerDetecionZone>();
     handle.add_class::<health_ui::HealthUI>();
     handle.add_class::<soft_collision::SoftCollision>();
+    handle.add_class::<wander_controller::WanderController>();
 }
 
 // Macro that create the entry-points of the dynamic library.
