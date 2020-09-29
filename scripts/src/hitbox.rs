@@ -13,4 +13,9 @@ impl Hitbox {
     pub fn new(_owner: &Area2D) -> Self {
         Hitbox { damage: 1 }
     }
+
+    #[export]
+    pub fn get_hitbox_damage(&self, _owner: &Area2D) -> i64 {
+        self.damage
+    }
 }

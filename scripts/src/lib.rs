@@ -8,6 +8,7 @@ mod hitbox;
 mod hurtbox;
 mod player;
 mod player_detecion_zone;
+mod player_hurt_sound;
 mod soft_collision;
 mod stats;
 mod sword_hitbox;
@@ -28,6 +29,7 @@ fn init(handle: InitHandle) {
     handle.add_class::<health_ui::HealthUI>();
     handle.add_class::<soft_collision::SoftCollision>();
     handle.add_class::<wander_controller::WanderController>();
+    handle.add_class::<player_hurt_sound::PlayerHurtSound>();
 }
 
 // Macro that create the entry-points of the dynamic library.

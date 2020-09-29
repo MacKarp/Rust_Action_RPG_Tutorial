@@ -56,11 +56,25 @@ impl Hurtbox {
     fn set_invincible(&mut self, owner: &Area2D, value: bool) {
         self.invincible = value;
         if self.invincible {
-            // can't emit signal when `&mut self` is in use, instead call function directly
+            // can't emit signal when `&mut self` is in use, instead call function directly (is there a way to emmit signal in this case?)
             self._on_hurtbox_invincibility_started(owner);
+            unsafe {
+                owner
+                    .get_parent()
+                    .unwrap()
+                    .assume_safe()
+                    .call_deferred("_on_hurtbox_invincibility_started", &[])
+            };
         } else {
-            // can't emit signal when `&mut self` is in use, instead call function directly
+            // can't emit signal when `&mut self` is in use, instead call function directly (is there a way to emmit signal in this case?)
             self._on_hurtbox_invincibility_ended(owner);
+            unsafe {
+                owner
+                    .get_parent()
+                    .unwrap()
+                    .assume_safe()
+                    .call_deferred("_on_hurtbox_invincibility_ended", &[])
+            };
         }
     }
 

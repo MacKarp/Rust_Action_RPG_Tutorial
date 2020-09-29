@@ -21,7 +21,7 @@ impl SwordHitbox {
     }
 
     #[export]
-    fn get_hitbox_damage(&self, _owner: &Area2D) -> i64 {
-        self.hitbox.damage
+    fn get_hitbox_damage(&self, owner: &Area2D) -> i64 {
+        self.hitbox.get_hitbox_damage(owner)
     }
 }
