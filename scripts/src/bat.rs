@@ -30,6 +30,7 @@ pub struct Bat {
     hurtbox: Ref<Node>,
     soft_collision: Ref<Node>,
     wander_controller: Ref<Node>,
+    animation_player: Ref<Node>,
 }
 
 enum BatState {
@@ -56,6 +57,7 @@ impl Bat {
             soft_collision: Node::new().into_shared(),
             wander_controller: Node::new().into_shared(),
             wander_target_range: 4,
+            animation_player: Node::new().into_shared(),
         }
     }
 
@@ -116,6 +118,11 @@ impl Bat {
             .expect("WanderController node should exist");
 
         self.state = self.pick_random_state(&mut vec![BatState::IDLE, BatState::WANDER]);
+
+        // Access `AnimationPlayer` node
+        self.animation_player = owner
+            .get_node("AnimationPlayer")
+            .expect("AnimationPlayer node Should Exist");
     }
 
     #[export]
@@ -210,7 +217,6 @@ impl Bat {
         let stats = unsafe { self.stats.assume_safe() };
         let stats = stats.cast::<Node>().expect("Node should cast to Node");
         let area = unsafe { area.assume_safe() };
-        //area.set("show_hit", true.to_variant());
 
         // Update `health` variable in `Stats` node
         let health = unsafe {
@@ -226,6 +232,7 @@ impl Bat {
 
         let hurtbox = unsafe { self.hurtbox.assume_safe() };
         unsafe { hurtbox.call("create_hit_effect", &[]) };
+        unsafe { hurtbox.call("start_invincibility", &[(0.4).to_variant()]) };
     }
 
     // Accepting signal
@@ -288,5 +295,18 @@ impl Bat {
                     .to_variant()],
             )
         };
+    }
+
+    #[export]
+    fn _on_hurtbox_invincibility_started(&self, _owner: &KinematicBody2D) {
+        let animation_player = unsafe { self.animation_player.assume_safe() };
+        let animation_player = animation_player.cast::<AnimationPlayer>().unwrap();
+        animation_player.play("Start", -1.0, 1.0, false)
+    }
+    #[export]
+    fn _on_hurtbox_invincibility_ended(&self, _owner: &KinematicBody2D) {
+        let animation_player = unsafe { self.animation_player.assume_safe() };
+        let animation_player = animation_player.cast::<AnimationPlayer>().unwrap();
+        animation_player.play("Stop", -1.0, 1.0, false)
     }
 }

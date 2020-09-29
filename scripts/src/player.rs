@@ -12,6 +12,8 @@ pub struct Player {
     roll_vector: Vector2,
     stats: Ref<Node>,
     hurtbox: Ref<Node>,
+    player_hurt_sound_load: Ref<PackedScene>,
+    blink_animation_player: Ref<Node>,
 }
 
 const ACCELERATION: f32 = 500.0;
@@ -37,6 +39,8 @@ impl Player {
             roll_vector: Vector2::new(0.0, 1.0),
             stats: Node::new().into_shared(),
             hurtbox: Node::new().into_shared(),
+            player_hurt_sound_load: PackedScene::new().into_shared(),
+            blink_animation_player: Node::new().into_shared(),
         }
     }
 
@@ -77,6 +81,18 @@ impl Player {
         self.hurtbox = owner
             .get_node("Hurtbox")
             .expect("Hurtbox node Should Exist");
+
+        // Loading scene
+        let player_hurt_sound_load = load_scene("res://Player/PlayerHurtSound.tscn");
+        match player_hurt_sound_load {
+            Some(_scene) => self.player_hurt_sound_load = _scene,
+            None => godot_print!("Could not load child scene. Check name."),
+        }
+
+        // Access `BlinkAnimationPlayer` node
+        self.blink_animation_player = owner
+            .get_node("BlinkAnimationPlayer")
+            .expect("BlinkAnimationPlayer node Should Exist");
     }
 
     // Called during the physics processing step of the main loop.
@@ -114,8 +130,8 @@ impl Player {
 
         match self.state {
             PlayerState::MOVE => self.move_state(owner, delta, animation_tree, animation_state),
-            PlayerState::ROLL => self.roll_state(owner, delta, animation_state),
-            PlayerState::ATTACK => self.attack_state(owner, delta, animation_state),
+            PlayerState::ROLL => self.roll_state(owner, animation_state),
+            PlayerState::ATTACK => self.attack_state(owner, animation_state),
         }
     }
 
@@ -181,7 +197,6 @@ impl Player {
     fn roll_state(
         &mut self,
         owner: &KinematicBody2D,
-        _delta: f64,
         animation_state: TRef<AnimationNodeStateMachinePlayback>,
     ) {
         self.velocity = self.roll_vector * ROLL_SPEED;
@@ -192,7 +207,6 @@ impl Player {
     fn attack_state(
         &mut self,
         _owner: &KinematicBody2D,
-        _delta: f64,
         animation_state: TRef<AnimationNodeStateMachinePlayback>,
     ) {
         self.velocity = Vector2::zero();
@@ -225,17 +239,51 @@ impl Player {
     }
 
     #[export]
-    fn _on_hurtbox_area_entered(&self, _owner: &KinematicBody2D, _area: Ref<Area2D>) {
+    fn _on_hurtbox_area_entered(&self, owner: &KinematicBody2D, area: Ref<Area2D>) {
         let stats = unsafe { self.stats.assume_safe() };
+        let area = unsafe { area.assume_safe() };
 
-        // Update `health` variable in `PlayerStats` node
-        let health = unsafe { (stats.call("get_health", &[]).to_i64() - 1 as i64).to_variant() };
+        // Update `health` variable in `Stats` node
+        let health = unsafe {
+            (stats.call("get_health", &[]).to_i64() - area.call("get_hitbox_damage", &[]).to_i64())
+                .to_variant()
+        };
+
         unsafe {
             stats.call("set_health", &[health]);
         }
 
         let hurtbox = unsafe { self.hurtbox.assume_safe() };
-        unsafe { hurtbox.call("start_invincibility", &[(0.5).to_variant()]) };
+        unsafe { hurtbox.call("start_invincibility", &[(0.6).to_variant()]) };
         unsafe { hurtbox.call("create_hit_effect", &[]) };
+
+        let player_hurt_sound = unsafe { self.player_hurt_sound_load.assume_safe() };
+        let player_hurt_sound = player_hurt_sound
+            .instance(PackedScene::GEN_EDIT_STATE_DISABLED)
+            .expect("should be able to instance scene");
+        unsafe {
+            owner
+                .get_tree()
+                .unwrap()
+                .assume_safe()
+                .current_scene()
+                .unwrap()
+                .assume_safe()
+                .add_child(player_hurt_sound, false)
+        };
+    }
+
+    #[export]
+    fn _on_hurtbox_invincibility_started(&self, _owner: &KinematicBody2D) {
+        let blink_animation_player = unsafe { self.blink_animation_player.assume_safe() };
+        let blink_animation_player = blink_animation_player.cast::<AnimationPlayer>().unwrap();
+        blink_animation_player.play("Start", -1.0, 1.0, false)
+    }
+
+    #[export]
+    fn _on_hurtbox_invincibility_ended(&self, _owner: &KinematicBody2D) {
+        let blink_animation_player = unsafe { self.blink_animation_player.assume_safe() };
+        let blink_animation_player = blink_animation_player.cast::<AnimationPlayer>().unwrap();
+        blink_animation_player.play("Stop", -1.0, 1.0, false)
     }
 }
