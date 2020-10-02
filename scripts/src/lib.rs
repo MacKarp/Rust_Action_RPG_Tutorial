@@ -1,6 +1,7 @@
 use gdnative::prelude::*;
 
 mod bat;
+mod camera;
 mod effect;
 mod grass;
 mod health_ui;
@@ -30,6 +31,7 @@ fn init(handle: InitHandle) {
     handle.add_class::<soft_collision::SoftCollision>();
     handle.add_class::<wander_controller::WanderController>();
     handle.add_class::<player_hurt_sound::PlayerHurtSound>();
+    handle.add_class::<camera::Camera>();
 }
 
 // Macro that create the entry-points of the dynamic library.
