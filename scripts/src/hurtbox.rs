@@ -12,6 +12,7 @@ pub struct Hurtbox {
     main: Ref<Node>,
     invincible: bool,
     timer: Ref<Node>,
+    collision_shape: Ref<Node>,
 }
 
 // Hurtbox implementation.
@@ -25,6 +26,7 @@ impl Hurtbox {
             main: Node::new().into_shared(),
             invincible: false,
             timer: Node::new().into_shared(),
+            collision_shape: Node::new().into_shared(),
         }
     }
 
@@ -50,6 +52,10 @@ impl Hurtbox {
 
         //Accesing Timer node
         self.timer = owner.get_node("Timer").expect("Timer node should exist");
+        //Accessing CollisionShape2D node
+        self.collision_shape = owner
+            .get_node("CollisionShape2D")
+            .expect("CollisionShape2D node should exist");
     }
 
     #[export]
@@ -129,12 +135,16 @@ impl Hurtbox {
     }
 
     #[export]
-    fn _on_hurtbox_invincibility_started(&self, owner: &Area2D) {
-        owner.set_deferred("monitorable", false.to_variant());
+    fn _on_hurtbox_invincibility_started(&self, _owner: &Area2D) {
+        let collision_shape = unsafe { self.collision_shape.assume_safe() };
+        let collision_shape = collision_shape.cast::<CollisionShape2D>().unwrap();
+        collision_shape.set_deferred("disabled", true.to_variant());
     }
 
     #[export]
-    fn _on_hurtbox_invincibility_ended(&mut self, owner: &Area2D) {
-        owner.set("monitorable", true.to_variant());
+    fn _on_hurtbox_invincibility_ended(&mut self, _owner: &Area2D) {
+        let collision_shape = unsafe { self.collision_shape.assume_safe() };
+        let collision_shape = collision_shape.cast::<CollisionShape2D>().unwrap();
+        collision_shape.set("disabled", false.to_variant());
     }
 }
