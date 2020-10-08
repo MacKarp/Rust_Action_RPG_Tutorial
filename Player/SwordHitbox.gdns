@@ -1,10 +1,8 @@
 [gd_resource type="NativeScript" load_steps=2 format=2]
 
-[sub_resource type="GDNativeLibrary" id=1]
-entry/X11.64 = "res://scripts/target/debug/libscripts.so"
-dependency/X11.64 = [  ]
+[ext_resource path="res://scripts/script.tres" type="GDNativeLibrary" id=1]
 
 [resource]
 resource_name = "SwordHitbox"
 class_name = "SwordHitbox"
-library = SubResource( 1 )
+library = ExtResource( 1 )
