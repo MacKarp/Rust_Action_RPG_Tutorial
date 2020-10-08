@@ -1,5 +1,0 @@
-[gd_resource type="NativeScript" format=2]
-
-[resource]
-resource_name = "player"
-class_name = "player"
