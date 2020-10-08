@@ -1,5 +1,7 @@
 [gd_resource type="GDNativeLibrary" format=2]
 
 [resource]
+entry/Windows.64 = "res://scripts/target/debug/scripts.dll"
 entry/X11.64 = "res://scripts/target/debug/libscripts.so"
+dependency/Windows.64 = [  ]
 dependency/X11.64 = [  ]
